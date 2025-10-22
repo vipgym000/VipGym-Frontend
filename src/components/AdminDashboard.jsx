@@ -42,9 +42,9 @@ function AdminDashboard() {
         setIsLoading(true);
         try {
             const [usersData, membershipsData, revenueData] = await Promise.all([
-                apiCall('/users/all'),
-                apiCall('/memberships/all'),
-                apiCall('/payments/revenue')
+                apiCall('/admin/users/all'),
+                apiCall('/admin/memberships/all'),
+                apiCall('/api/payments/revenue')
             ]);
             if (usersData && membershipsData && revenueData) {
                 setUsers(usersData);
@@ -126,7 +126,7 @@ function AdminDashboard() {
     const handleAddMembership = async (e) => {
         e.preventDefault();
         try {
-            const result = await apiCall('/memberships/add', { method: 'POST', body: JSON.stringify(newMembership) });
+            const result = await apiCall('/admin/memberships/add', { method: 'POST', body: JSON.stringify(newMembership) });
             showMessage(result, 'success');
             setNewMembership({ name: '', durationInMonths: '', fee: '' });
             fetchInitialData();
@@ -138,7 +138,7 @@ function AdminDashboard() {
     const handleDeleteMembership = async (id) => {
         if (window.confirm('Are you sure you want to delete this membership plan?')) {
             try {
-                const result = await apiCall(`/memberships/delete/${id}`, { method: 'DELETE' });
+                const result = await apiCall(`/admin/memberships/delete/${id}`, { method: 'DELETE' });
                 if (result) {
                     showMessage(result, 'success');
                     fetchInitialData();
@@ -151,19 +151,19 @@ function AdminDashboard() {
 
     const handleFetchUserPayments = async () => {
         if (!selectedUserId) { showMessage('Please enter a User ID', 'error'); return; }
-        const data = await apiCall(`/payments/user/${selectedUserId}`);
+        const data = await apiCall(`/api/payments/user/${selectedUserId}`);
         if (data) setUserPayments(data);
     };
 
     const handleGetReminder = async () => {
         if (!selectedUserId) { showMessage('Please enter a User ID', 'error'); return; }
-        const data = await apiCall(`/reminder/message/${selectedUserId}`);
+        const data = await apiCall(`/api/reminder/message/${selectedUserId}`);
         if (data) setReminderMessage(data.message || 'No message found.');
     };
 
     const handleSendReminderEmail = async () => {
         if (!selectedUserId) { showMessage('Please enter a User ID', 'error'); return; }
-        const data = await apiCall(`/reminder/send/${selectedUserId}`, { method: 'POST' });
+        const data = await apiCall(`/api/reminder/send/${selectedUserId}`, { method: 'POST' });
         if (data) showMessage(data.status, 'success');
     };
     
@@ -172,7 +172,7 @@ function AdminDashboard() {
             showMessage('Please provide both start and end dates.', 'error');
             return;
         }
-        const data = await apiCall(`/payments/revenue/custom?startDate=${customRevenueDates.startDate}&endDate=${customRevenueDates.endDate}`);
+        const data = await apiCall(`/api/payments/revenue/custom?startDate=${customRevenueDates.startDate}&endDate=${customRevenueDates.endDate}`);
         if(data) {
             showMessage(`Custom Revenue: $${data.customRevenue}`, 'success');
         }

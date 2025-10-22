@@ -18,7 +18,7 @@ const LoginPage = () => {
     setMessage('');
 
     try {
-      const response = await fetch(`${apiBaseUrl}/signin`, {
+      const response = await fetch(`${apiBaseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

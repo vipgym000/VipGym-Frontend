@@ -52,7 +52,7 @@ const UserRegistration = () => {
     ];
 
     // API base URL - adjust this to match your backend
-    const API_BASE_URL = 'http://localhost:8443';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     // Detect if device is mobile
     useEffect(() => {

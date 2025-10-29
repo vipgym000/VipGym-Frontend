@@ -25,6 +25,7 @@ const UserRegistration = () => {
     const [allFieldsValid, setAllFieldsValid] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isCompressing, setIsCompressing] = useState(false);
     
     const [formData, setFormData] = useState({
         fullName: '',
@@ -158,27 +159,92 @@ const UserRegistration = () => {
         }
     };
 
-    const processImageFile = (file) => {
+    // Function to compress image
+    const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.8) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = () => {
+                // Calculate new dimensions
+                let width = img.width;
+                let height = img.height;
+                
+                // Resize if too large
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    // Check if blob is still too large and compress further if needed
+                    if (blob && blob.size > 1024 * 1024 && quality > 0.3) {
+                        // If still too large, try with lower quality
+                        compressImage(file, maxWidth, maxHeight, quality * 0.8).then(resolve);
+                    } else {
+                        resolve(blob);
+                    }
+                }, 'image/jpeg', quality);
+            };
+            
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
+    const processImageFile = async (file) => {
         // Validate file type
         if (!file.type.startsWith('image/')) {
             setErrors(prev => ({ ...prev, profilePicture: 'Please select an image file' }));
             return;
         }
         
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setErrors(prev => ({ ...prev, profilePicture: 'Image size should be less than 5MB' }));
-            return;
+        setIsCompressing(true);
+        
+        try {
+            let processedFile = file;
+            
+            // If file is larger than 1MB, compress it
+            if (file.size > 1024 * 1024) {
+                const compressedBlob = await compressImage(file);
+                if (compressedBlob) {
+                    // Create a new File object from the compressed blob
+                    const fileName = file.name.split('.')[0] + '_compressed.jpg';
+                    processedFile = new File([compressedBlob], fileName, { type: 'image/jpeg' });
+                    
+                    // Show notification about compression
+                    const originalSize = (file.size / (1024 * 1024)).toFixed(2);
+                    const compressedSize = (compressedBlob.size / (1024 * 1024)).toFixed(2);
+                    const reduction = ((1 - compressedBlob.size / file.size) * 100).toFixed(0);
+                    
+                    console.log(`Image compressed from ${originalSize}MB to ${compressedSize}MB (${reduction}% reduction)`);
+                }
+            }
+            
+            setFormData(prev => ({ ...prev, profilePicture: processedFile }));
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewImage(reader.result);
+            };
+            reader.readAsDataURL(processedFile);
+            
+            // Clear any previous errors
+            setErrors(prev => ({ ...prev, profilePicture: '' }));
+        } catch (error) {
+            console.error('Error processing image:', error);
+            setErrors(prev => ({ ...prev, profilePicture: 'Failed to process image. Please try another one.' }));
+        } finally {
+            setIsCompressing(false);
         }
-        
-        setFormData(prev => ({ ...prev, profilePicture: file }));
-        
-        // Create preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setPreviewImage(reader.result);
-        };
-        reader.readAsDataURL(file);
     };
 
     const startCamera = async () => {
@@ -225,8 +291,9 @@ const UserRegistration = () => {
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            canvas.toBlob((blob) => {
+            canvas.toBlob(async (blob) => {
                 if (blob) {
+                    // Create a file from the blob
                     const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
                     processImageFile(file);
                     stopCamera();
@@ -673,7 +740,7 @@ const UserRegistration = () => {
                                             className="user-registration__file-input"
                                         />
                                         {errors.profilePicture && <div className="user-registration__field-error">{errors.profilePicture}</div>}
-                                        <p className="user-registration__upload-hint">Max file size: 5MB. Supported formats: JPG, PNG, GIF</p>
+                                        <p className="user-registration__upload-hint">Max file size: 5MB. Supported formats: JPG, PNG, GIF. Images larger than 1MB will be compressed automatically.</p>
                                     </div>
                                 </div>
                             )}
@@ -760,6 +827,14 @@ const UserRegistration = () => {
                                     >
                                         Remove Image
                                     </button>
+                                </div>
+                            )}
+                            
+                            {/* Compression Indicator */}
+                            {isCompressing && (
+                                <div className="user-registration__compressing-indicator">
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Compressing image...
                                 </div>
                             )}
                             

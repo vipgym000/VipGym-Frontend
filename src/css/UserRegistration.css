@@ -1,0 +1,1219 @@
+/* UserRegistration.css */
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  --gray-color: #6c757d;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+.user-registration {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-registration__register-container {
+  width: 100%;
+  max-width: 900px;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  animation: slideUp 0.5s ease-out;
+}
+
+.user-registration__brand-section {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.user-registration__brand-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.user-registration__brand-tagline {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.user-registration__back-btn {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--light-color);
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--dark-color);
+}
+
+.user-registration__back-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.user-registration__progress-indicator {
+  display: flex;
+  justify-content: space-between;
+  padding: 2rem 1.5rem;
+  background-color: var(--light-color);
+  position: relative;
+}
+
+.user-registration__progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.user-registration__progress-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  color: var(--gray-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  border: 2px solid #e0e0e0;
+  transition: var(--transition);
+}
+
+.user-registration__progress-step.active .user-registration__progress-number {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.user-registration__progress-step.completed .user-registration__progress-number {
+  background-color: var(--success-color);
+  color: white;
+  border-color: var(--success-color);
+}
+
+.user-registration__progress-label {
+  font-size: 0.9rem;
+  color: var(--gray-color);
+  text-align: center;
+  max-width: 100px;
+}
+
+.user-registration__progress-step.active .user-registration__progress-label {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.user-registration__progress-step.completed .user-registration__progress-label {
+  color: var(--success-color);
+}
+
+.user-registration__progress-line {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: #e0e0e0;
+  z-index: 1;
+}
+
+.user-registration__progress-step.completed ~ .user-registration__progress-line {
+  background-color: var(--success-color);
+}
+
+.user-registration__error-message {
+  margin: 1rem 1.5rem;
+  padding: 0.75rem;
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--danger-color);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--danger-color);
+}
+
+.user-registration__register-form {
+  padding: 2rem 1.5rem;
+}
+
+.user-registration__form-step {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.user-registration__step-title {
+  font-size: 1.5rem;
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.user-registration__step-subtitle {
+  color: var(--gray-color);
+  margin-bottom: 1.5rem;
+}
+
+.user-registration__form-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-registration__form-group {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.user-registration__form-group.full-width {
+  width: 100%;
+}
+
+.user-registration__form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--dark-color);
+}
+
+.user-registration__form-group input,
+.user-registration__form-group select,
+.user-registration__form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.user-registration__form-group input:focus,
+.user-registration__form-group select:focus,
+.user-registration__form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.user-registration__input-error {
+  border-color: var(--danger-color) !important;
+}
+
+.user-registration__field-error {
+  color: var(--danger-color);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.user-registration__select-wrapper {
+  position: relative;
+}
+
+.user-registration__select-arrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--gray-color);
+}
+
+.user-registration__image-source-tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.user-registration__source-tab {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--gray-color);
+  font-weight: 500;
+}
+
+.user-registration__source-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.user-registration__upload-section,
+.user-registration__camera-section {
+  margin-bottom: 1.5rem;
+}
+
+.user-registration__upload-area {
+  border: 2px dashed #ddd;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.user-registration__upload-area:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(102, 126, 234, 0.05);
+}
+
+.user-registration__image-preview {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+}
+
+.user-registration__image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-registration__image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.user-registration__image-preview:hover .user-registration__image-overlay {
+  opacity: 1;
+}
+
+.user-registration__upload-placeholder {
+  color: var(--gray-color);
+}
+
+.user-registration__upload-placeholder p {
+  margin-top: 1rem;
+}
+
+.user-registration__upload-controls {
+  margin-top: 1rem;
+}
+
+.user-registration__file-input {
+  display: none;
+}
+
+.user-registration__upload-hint {
+  font-size: 0.85rem;
+  color: var(--gray-color);
+  margin-top: 0.5rem;
+}
+
+.user-registration__camera-container {
+  margin-top: 1rem;
+}
+
+.user-registration__camera-video-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.user-registration__camera-video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.user-registration__camera-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.user-registration__capture-btn,
+.user-registration__cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.user-registration__capture-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.user-registration__capture-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.user-registration__cancel-btn {
+  background-color: #e0e0e0;
+  color: var(--dark-color);
+}
+
+.user-registration__cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.user-registration__remove-image-container {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.user-registration__remove-image-btn {
+  padding: 0.5rem 1rem;
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.user-registration__remove-image-btn:hover {
+  background-color: #c82333;
+}
+
+.user-registration__membership-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-registration__membership-card {
+  border: 2px solid #e0e0e0;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.user-registration__membership-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--box-shadow);
+}
+
+.user-registration__membership-card.selected {
+  border-color: var(--primary-color);
+  background-color: rgba(102, 126, 234, 0.05);
+}
+
+.user-registration__membership-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.user-registration__membership-header h3 {
+  font-size: 1.2rem;
+  color: var(--dark-color);
+  margin: 0;
+}
+
+.user-registration__membership-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.user-registration__membership-details p {
+  margin: 0.5rem 0;
+  color: var(--gray-color);
+}
+
+.user-registration__selected-plan {
+  text-align: center;
+  padding: 1rem;
+  background-color: rgba(102, 126, 234, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 1.5rem;
+}
+
+.user-registration__selected-plan h4 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.user-registration__loading-memberships {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--gray-color);
+}
+
+.user-registration__loading-memberships p {
+  margin-top: 1rem;
+}
+
+.user-registration__form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.user-registration__prev-btn,
+.user-registration__next-btn,
+.user-registration__submit-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.user-registration__prev-btn {
+  background-color: #e0e0e0;
+  color: var(--dark-color);
+}
+
+.user-registration__prev-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.user-registration__next-btn,
+.user-registration__submit-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+}
+
+.user-registration__next-btn:hover,
+.user-registration__submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.user-registration__submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.user-registration__review-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.user-registration__review-section {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+}
+
+.user-registration__review-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--dark-color);
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.user-registration__review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.user-registration__review-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-registration__review-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.user-registration__review-label {
+  font-weight: 600;
+  color: var(--gray-color);
+  margin-bottom: 0.25rem;
+}
+
+.user-registration__review-value {
+  color: var(--dark-color);
+}
+
+.user-registration__review-image {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.user-registration__review-image img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-registration__success-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.user-registration__success-icon {
+  color: var(--success-color);
+  margin-bottom: 1rem;
+}
+
+.user-registration__success-title {
+  font-size: 1.5rem;
+  color: var(--dark-color);
+  margin-bottom: 1rem;
+}
+
+.user-registration__success-message {
+  color: var(--gray-color);
+  margin-bottom: 1.5rem;
+}
+
+.user-registration__receipt-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.user-registration__loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.user-registration__loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(102, 126, 234, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+}
+
+.user-registration__loading-overlay p {
+  margin-top: 1rem;
+  color: var(--dark-color);
+}
+
+/* Animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .user-registration {
+    padding: 0.5rem;
+  }
+  
+  .user-registration__register-container {
+    max-width: 100%;
+  }
+  
+  .user-registration__brand-title {
+    font-size: 2rem;
+  }
+  
+  .user-registration__progress-indicator {
+    padding: 1.5rem 1rem;
+  }
+  
+  .user-registration__progress-label {
+    font-size: 0.8rem;
+  }
+  
+  .user-registration__register-form {
+    padding: 1.5rem 1rem;
+  }
+  
+  .user-registration__form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .user-registration__membership-plans {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-registration__review-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-registration__form-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .user-registration__prev-btn,
+  .user-registration__next-btn,
+  .user-registration__submit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .user-registration__receipt-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-registration__brand-section {
+    padding: 1.5rem;
+  }
+  
+  .user-registration__brand-title {
+    font-size: 1.8rem;
+  }
+  
+  .user-registration__back-btn {
+    margin: 1rem;
+  }
+  
+  .user-registration__progress-indicator {
+    padding: 1rem 0.5rem;
+  }
+  
+  .user-registration__progress-number {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .user-registration__progress-label {
+    font-size: 0.7rem;
+    max-width: 80px;
+  }
+  
+  .user-registration__register-form {
+    padding: 1rem 0.5rem;
+  }
+  
+  .user-registration__image-source-tabs {
+    flex-direction: column;
+    border-bottom: none;
+  }
+  
+  .user-registration__source-tab {
+    border-bottom: none;
+    border-right: 2px solid transparent;
+    padding: 0.5rem;
+  }
+  
+  .user-registration__source-tab.active {
+    border-right-color: var(--primary-color);
+  }
+  
+  .user-registration__upload-area {
+    padding: 1.5rem;
+  }
+  
+  .user-registration__camera-controls {
+    flex-direction: column;
+  }
+}
+/* Additional styles for UserRegistration component */
+
+/* WhatsApp button styling */
+.user-registration__receipt-actions .btn-success {
+  background-color: #25D366;
+  border-color: #25D366;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.user-registration__receipt-actions .btn-success:hover {
+  background-color: #128C7E;
+  border-color: #128C7E;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3);
+}
+
+/* Enhanced button styling for all receipt actions */
+.user-registration__receipt-actions .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: var(--transition);
+  text-decoration: none;
+  margin: 0 0.5rem;
+}
+
+.user-registration__receipt-actions .btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+}
+
+.user-registration__receipt-actions .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.user-registration__receipt-actions .btn-outline-secondary {
+  border: 1px solid var(--gray-color);
+  color: var(--gray-color);
+}
+
+.user-registration__receipt-actions .btn-outline-secondary:hover {
+  background-color: var(--gray-color);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Enhanced form styling */
+.user-registration__form-group input,
+.user-registration__form-group select,
+.user-registration__form-group textarea {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--border-radius);
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  transition: var(--transition);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.user-registration__form-group input:focus,
+.user-registration__form-group select:focus,
+.user-registration__form-group textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  outline: none;
+}
+
+/* Enhanced membership card styling */
+.user-registration__membership-card {
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-registration__membership-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.user-registration__membership-card:hover::before,
+.user-registration__membership-card.selected::before {
+  transform: scaleX(1);
+}
+
+.user-registration__membership-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.user-registration__membership-card.selected {
+  border-color: var(--primary-color);
+  background-color: rgba(102, 126, 234, 0.05);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+/* Enhanced step indicator styling */
+.user-registration__progress-step {
+  position: relative;
+}
+
+.user-registration__progress-step::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--light-color);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.user-registration__progress-step.active::after {
+  opacity: 1;
+}
+
+/* Enhanced image preview styling */
+.user-registration__image-preview {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  border: 3px solid white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.user-registration__image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.user-registration__image-preview:hover img {
+  transform: scale(1.05);
+}
+
+/* Enhanced upload area styling */
+.user-registration__upload-area {
+  border: 2px dashed #ddd;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(248, 249, 250, 0.5);
+}
+
+.user-registration__upload-area:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(102, 126, 234, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced camera video styling */
+.user-registration__camera-video-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.user-registration__camera-video-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.user-registration__camera-video {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: scaleX(-1); /* Mirror the video for a more natural experience */
+}
+
+/* Enhanced review section styling */
+.user-registration__review-section {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-registration__review-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-registration__review-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--dark-color);
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+
+.user-registration__review-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+/* Enhanced success content styling */
+.user-registration__success-content {
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.user-registration__success-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  border-radius: 2px;
+}
+
+.user-registration__success-icon {
+  color: var(--success-color);
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Enhanced loading overlay styling */
+.user-registration__loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.user-registration__loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(102, 126, 234, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+}
+
+.user-registration__loading-overlay p {
+  margin-top: 1rem;
+  color: var(--dark-color);
+  font-weight: 500;
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 768px) {
+  .user-registration__receipt-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .user-registration__receipt-actions .btn {
+    width: 100%;
+    max-width: 300px;
+    margin: 0;
+  }
+  
+  .user-registration__form-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .user-registration__prev-btn,
+  .user-registration__next-btn,
+  .user-registration__submit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .user-registration__progress-indicator {
+    padding: 1.5rem 1rem;
+  }
+  
+  .user-registration__progress-label {
+    font-size: 0.8rem;
+  }
+  
+  .user-registration__register-form {
+    padding: 1.5rem 1rem;
+  }
+  
+  .user-registration__form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .user-registration__membership-plans {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-registration__review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-registration__brand-section {
+    padding: 1.5rem;
+  }
+  
+  .user-registration__brand-title {
+    font-size: 1.8rem;
+  }
+  
+  .user-registration__back-btn {
+    margin: 1rem;
+  }
+  
+  .user-registration__progress-indicator {
+    padding: 1rem 0.5rem;
+  }
+  
+  .user-registration__progress-number {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .user-registration__progress-label {
+    font-size: 0.7rem;
+    max-width: 80px;
+  }
+  
+  .user-registration__register-form {
+    padding: 1rem 0.5rem;
+  }
+  
+  .user-registration__image-source-tabs {
+    flex-direction: column;
+    border-bottom: none;
+  }
+  
+  .user-registration__source-tab {
+    border-bottom: none;
+    border-right: 2px solid transparent;
+    padding: 0.5rem;
+  }
+  
+  .user-registration__source-tab.active {
+    border-right-color: var(--primary-color);
+  }
+  
+  .user-registration__upload-area {
+    padding: 1.5rem;
+  }
+  
+  .user-registration__camera-controls {
+    flex-direction: column;
+  }
+  
+  .user-registration__success-content {
+    padding: 1.5rem;
+  }
+  
+  .user-registration__receipt-actions {
+    padding: 0 1rem;
+  }
+}

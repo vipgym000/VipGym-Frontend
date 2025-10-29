@@ -928,7 +928,7 @@ function AdminDashboard() {
                         <FiChevronDown />
                     </div>
                 </div>
-                
+
                 <div className="nav-card" onClick={() => setActiveSection('memberships')}>
                     <div className="nav-card-icon">
                         <FiCreditCard />
@@ -941,7 +941,7 @@ function AdminDashboard() {
                         <FiChevronDown />
                     </div>
                 </div>
-                
+
                 <div className="nav-card" onClick={() => setActiveSection('payments')}>
                     <div className="nav-card-icon">
                         <FiDollarSign />
@@ -1154,7 +1154,7 @@ function AdminDashboard() {
                                                     >
                                                         <FiMoreVertical />
                                                     </button>
-                                                    
+
                                                     <div className={`dropdown-menu ${activeDropdown === dropdownId ? 'show' : ''}`}>
                                                         <button
                                                             className="dropdown-item"

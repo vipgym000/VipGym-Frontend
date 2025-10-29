@@ -892,6 +892,7 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .status-active {
@@ -950,8 +951,9 @@ body {
   padding: 1rem 1.25rem;
   background: var(--light-color);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Changed to align the dropdown to the right */
   align-items: center;
+  position: relative; /* Added for dropdown positioning */
 }
 
 /* ===== MEMBERSHIP CARDS ===== */
@@ -1033,7 +1035,8 @@ body {
 .dropdown-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: auto; /* Changed from right: 0 to left: auto */
+  right: 0; /* Added to align to the right */
   background: white;
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
@@ -1083,6 +1086,54 @@ body {
 
 .dropdown-item.danger:hover {
   background: rgba(239, 68, 68, 0.1);
+}
+
+/* ===== MOBILE RESPONSIVE DROPDOWN ===== */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    position: fixed;
+    top: auto;
+    left: auto; /* Changed from left: 0 to left: auto */
+    right: 1rem; /* Added to align to the right with some margin */
+    width: calc(100% - 2rem); /* Adjust width to account for margins */
+    max-width: 300px;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius);
+    z-index: 1001;
+    margin-top: 0.5rem;
+  }
+  
+  .dropdown-menu.show {
+    transform: translateY(0);
+  }
+  
+  .dropdown-item {
+    padding: 0.875rem 1rem;
+  }
+}
+
+/* ===== DROPDOWN MENU WITH ARROW LAYOUT ===== */
+@media (max-width: 480px) {
+  .dropdown-menu {
+    position: fixed;
+    top: auto;
+    left: auto; /* Changed from left: 0 to left: auto */
+    right: 1rem; /* Added to align to the right with some margin */
+    width: calc(100% - 2rem); /* Adjust width to account for margins */
+    max-width: 300px;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius);
+    z-index: 1001;
+    margin-top: 0.5rem;
+  }
+  
+  .dropdown-menu.show {
+    transform: translateY(0);
+  }
+  
+  .dropdown-item {
+    padding: 0.875rem 1rem;
+  }
 }
 
 /* ===== MODALS ===== */

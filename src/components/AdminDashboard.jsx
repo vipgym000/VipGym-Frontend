@@ -27,6 +27,7 @@ import {
     FiPlus,
     FiFilter,
     FiChevronDown,
+    FiChevronLeft,
     FiSettings,
     FiImage,
     FiUserCheck,
@@ -34,7 +35,8 @@ import {
     FiGrid,
     FiList,
     FiPrinter,
-    FiAtSign
+    FiAtSign,
+    FiMoreVertical
 } from 'react-icons/fi';
 import '../css/AdminDashboard.css';
 
@@ -99,6 +101,10 @@ function AdminDashboard() {
         newMembershipId: ''
     });
 
+    // Dropdown states
+    const [activeDropdown, setActiveDropdown] = useState(null);
+    const dropdownRefs = useRef({});
+
     // Effects
     useEffect(() => {
         fetchInitialData();
@@ -115,15 +121,31 @@ function AdminDashboard() {
             }
         };
 
+        // Close dropdown when clicking outside
+        const handleClickOutside = (event) => {
+            if (activeDropdown && !event.target.closest('.dropdown-container')) {
+                setActiveDropdown(null);
+            }
+        };
+
         window.addEventListener('resize', handleResize);
+        document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            document.removeEventListener('mousedown', handleClickOutside);
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
             }
         };
     }, [autoRefresh, refreshInterval]);
+
+    // Handle dropdown clicks
+    const handleDropdownClick = (e, dropdownId) => {
+        e.stopPropagation();
+        const newActive = activeDropdown === dropdownId ? null : dropdownId;
+        setActiveDropdown(newActive);
+    };
 
     // API Functions
     const apiCall = async (url, options = {}) => {
@@ -484,34 +506,36 @@ function AdminDashboard() {
         setShowImageModal(true);
     };
 
-    const handleSendWhatsApp = (user, payment = null) => {
+    // Unified WhatsApp function that always uses the backend endpoint
+    const handleSendWhatsApp = (user, payment = null, customMessage = null) => {
         const phoneNumber = user.mobileNumber?.replace(/\D/g, '');
         if (!phoneNumber) {
             showMessage('Member does not have a valid mobile number.', 'error');
             return;
         }
 
-        let message = `Hello ${user.fullName},`;
+        let nextDueDate = '';
 
-        if (payment && payment.nextDueDate) {
-            message += ` Your membership is due on ${new Date(payment.nextDueDate).toLocaleDateString()}.`;
-        } else if (user.payments && user.payments.length > 0) {
-            const latestPayment = user.payments[0];
-            if (latestPayment.nextDueDate) {
-                message += ` Your membership is due on ${new Date(latestPayment.nextDueDate).toLocaleDateString()}.`;
-            }
+        // If we have a payment object, use its nextDueDate
+        if (payment?.nextDueDate) {
+            nextDueDate = payment.nextDueDate;
+        }
+        // Otherwise use the user's nextDueDate
+        else if (user.nextDueDate) {
+            nextDueDate = user.nextDueDate;
         }
 
-        if (payment && payment.receiptUrl) {
-            message += ` To view your payment receipt, please click on this link: ${payment.receiptUrl}`;
-        } else if (user.payments && user.payments.length > 0) {
-            const latestPayment = user.payments[0];
-            if (latestPayment.receiptUrl) {
-                message += ` To view your payment receipt, please click on this link: ${latestPayment.receiptUrl}`;
-            }
+        // Build the URL to our backend endpoint
+        let whatsappUrl = `${API_BASE_URL}/api/whatsapp/send?phoneNumber=${phoneNumber}`;
+
+        // Add nextDueDate if available
+        if (nextDueDate) {
+            whatsappUrl += `&nextDueDate=${nextDueDate}`;
         }
 
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        console.log("Sending WhatsApp via backend:", whatsappUrl);
+
+        // Open the backend endpoint which will redirect to WhatsApp
         window.open(whatsappUrl, '_blank');
     };
 
@@ -568,20 +592,15 @@ function AdminDashboard() {
         }
     };
 
+    // Now uses the unified handleSendWhatsApp function
     const handleSendWhatsAppReminder = () => {
-        if (!selectedUser || !reminderMessage) {
-            showMessage("No user or reminder message", 'error');
+        if (!selectedUser) {
+            showMessage("No user selected", 'error');
             return;
         }
 
-        const phoneNumber = selectedUser.mobileNumber?.replace(/\D/g, '');
-        if (!phoneNumber) {
-            showMessage('Member does not have a valid mobile number.', 'error');
-            return;
-        }
-
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(reminderMessage)}`;
-        window.open(whatsappUrl, '_blank');
+        // Use the unified WhatsApp function
+        handleSendWhatsApp(selectedUser, null, reminderMessage);
     };
 
     const handleViewPaymentDetails = (payment) => {
@@ -895,6 +914,48 @@ function AdminDashboard() {
                 </div>
             </div>
 
+            {/* Mobile Navigation Cards */}
+            <div className="mobile-nav-cards">
+                <div className="nav-card" onClick={() => setActiveSection('members')}>
+                    <div className="nav-card-icon">
+                        <FiUser />
+                    </div>
+                    <div className="nav-card-content">
+                        <h3>Members</h3>
+                        <p>Manage gym members</p>
+                    </div>
+                    <div className="nav-card-arrow">
+                        <FiChevronDown />
+                    </div>
+                </div>
+                
+                <div className="nav-card" onClick={() => setActiveSection('memberships')}>
+                    <div className="nav-card-icon">
+                        <FiCreditCard />
+                    </div>
+                    <div className="nav-card-content">
+                        <h3>Memberships</h3>
+                        <p>Manage membership plans</p>
+                    </div>
+                    <div className="nav-card-arrow">
+                        <FiChevronDown />
+                    </div>
+                </div>
+                
+                <div className="nav-card" onClick={() => setActiveSection('payments')}>
+                    <div className="nav-card-icon">
+                        <FiDollarSign />
+                    </div>
+                    <div className="nav-card-content">
+                        <h3>Payments</h3>
+                        <p>View payment history</p>
+                    </div>
+                    <div className="nav-card-arrow">
+                        <FiChevronDown />
+                    </div>
+                </div>
+            </div>
+
             <div className="dashboard-grid" style={{ marginTop: '1rem' }}>
                 <div className="card">
                     <h2 className="card-title">Revenue Trend</h2>
@@ -984,7 +1045,7 @@ function AdminDashboard() {
                     <h2 className="card-title">{getFilterTitle()}</h2>
                     <div className="header-actions">
                         <button
-                            className="btn-primary"
+                            className="btn btn-primary"
                             onClick={() => navigate('/register-user')}
                         >
                             <FiPlus /> Register New Member
@@ -1044,6 +1105,7 @@ function AdminDashboard() {
                                 )
                                 .map(member => {
                                     const status = getStatusBadge(member);
+                                    const dropdownId = `member-${member.id}`;
 
                                     return (
                                         <div className="member-card compact" key={member.id}>
@@ -1085,71 +1147,101 @@ function AdminDashboard() {
                                                 </div>
                                             </div>
                                             <div className="member-card-footer">
-                                                <button
-                                                    className="btn-icon"
-                                                    onClick={() => handleViewUserDetails(member.id)}
-                                                    title="View Details"
-                                                >
-                                                    <FiEye />
-                                                </button>
-                                                <button
-                                                    className="btn-icon"
-                                                    onClick={() => handleViewPaymentHistory(member.id)}
-                                                    title="View Payment History"
-                                                >
-                                                    <FiDollarSign />
-                                                </button>
-                                                <button
-                                                    className="btn-icon"
-                                                    onClick={() => {
-                                                        if (member && member.id) {
-                                                            openMarkPaymentModal(member);
-                                                        } else {
-                                                            showMessage("Invalid member data", 'error');
-                                                        }
-                                                    }}
-                                                    title="Mark Payment"
-                                                >
-                                                    <FiPlus />
-                                                </button>
-                                                <button
-                                                    className="btn-icon"
-                                                    onClick={() => handleSendReminder(member.id)}
-                                                    title="Send Reminder"
-                                                >
-                                                    <FiSend />
-                                                </button>
-                                                <button
-                                                    className="btn-icon"
-                                                    onClick={() => handleSendWhatsApp(member)}
-                                                    title="Send WhatsApp Reminder"
-                                                >
-                                                    <FiMessageSquare />
-                                                </button>
-                                                <button
-                                                    className="btn-icon"
-                                                    onClick={() => openSwitchMembershipModal(member)}
-                                                    title="Switch Membership"
-                                                >
-                                                    <FiCreditCard />
-                                                </button>
-                                                {member.status === 'ACTIVE' ? (
+                                                <div className="dropdown-container" ref={el => dropdownRefs.current[dropdownId] = el}>
                                                     <button
-                                                        className="btn-icon block-btn"
-                                                        onClick={() => handleBlockUser(member.id)}
-                                                        title="Block User"
+                                                        className="dropdown-toggle"
+                                                        onClick={(e) => handleDropdownClick(e, dropdownId)}
                                                     >
-                                                        <FiUserX />
+                                                        <FiMoreVertical />
                                                     </button>
-                                                ) : (
-                                                    <button
-                                                        className="btn-icon unblock-btn"
-                                                        onClick={() => handleUnblockUser(member.id)}
-                                                        title="Unblock User"
-                                                    >
-                                                        <FiUserCheck />
-                                                    </button>
-                                                )}
+                                                    
+                                                    <div className={`dropdown-menu ${activeDropdown === dropdownId ? 'show' : ''}`}>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => {
+                                                                handleViewUserDetails(member.id);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiEye /> View Details
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => {
+                                                                handleViewPaymentHistory(member.id);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiDollarSign /> Payment History
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => {
+                                                                openMarkPaymentModal(member);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiPlus /> Mark Payment
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => {
+                                                                handleSendReminder(member.id);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiSend /> Send Reminder
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => {
+                                                                handleSendWhatsApp(member);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiMessageSquare /> Send WhatsApp
+                                                        </button>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => {
+                                                                openSwitchMembershipModal(member);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiCreditCard /> Switch Membership
+                                                        </button>
+                                                        {member.status === 'ACTIVE' ? (
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => {
+                                                                    handleBlockUser(member.id);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <FiUserX /> Block User
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => {
+                                                                    handleUnblockUser(member.id);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <FiUserCheck /> Unblock User
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            className="dropdown-item danger"
+                                                            onClick={() => {
+                                                                handleDeleteUser(member.id);
+                                                                setActiveDropdown(null);
+                                                            }}
+                                                        >
+                                                            <FiTrash2 /> Delete User
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     )
@@ -1178,6 +1270,7 @@ function AdminDashboard() {
                                         )
                                         .map(member => {
                                             const status = getStatusBadge(member);
+                                            const dropdownId = `member-list-${member.id}`;
 
                                             return (
                                                 <tr key={member.id}>
@@ -1211,66 +1304,99 @@ function AdminDashboard() {
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <div className="table-actions">
+                                                        <div className="dropdown-container" ref={el => dropdownRefs.current[dropdownId] = el}>
                                                             <button
-                                                                className="btn-icon"
-                                                                onClick={() => handleViewUserDetails(member.id)}
-                                                                title="View Details"
+                                                                className="dropdown-toggle"
+                                                                onClick={(e) => handleDropdownClick(e, dropdownId)}
                                                             >
-                                                                <FiEye />
+                                                                <FiMoreVertical />
                                                             </button>
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => handleViewPaymentHistory(member.id)}
-                                                                title="View Payment History"
-                                                            >
-                                                                <FiDollarSign />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => openMarkPaymentModal(member)}
-                                                                title="Mark Payment"
-                                                            >
-                                                                <FiPlus />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => handleSendReminder(member.id)}
-                                                                title="Send Reminder"
-                                                            >
-                                                                <FiSend />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => handleSendWhatsApp(member)}
-                                                                title="Send WhatsApp Reminder"
-                                                            >
-                                                                <FiMessageSquare />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => openSwitchMembershipModal(member)}
-                                                                title="Switch Membership"
-                                                            >
-                                                                <FiCreditCard />
-                                                            </button>
-                                                            {member.status === 'ACTIVE' ? (
+                                                            <div className={`dropdown-menu ${activeDropdown === dropdownId ? 'show' : ''}`}>
                                                                 <button
-                                                                    className="btn-icon block-btn"
-                                                                    onClick={() => handleBlockUser(member.id)}
-                                                                    title="Block User"
+                                                                    className="dropdown-item"
+                                                                    onClick={() => {
+                                                                        handleViewUserDetails(member.id);
+                                                                        setActiveDropdown(null);
+                                                                    }}
                                                                 >
-                                                                    <FiUserX />
+                                                                    <FiEye /> View Details
                                                                 </button>
-                                                            ) : (
                                                                 <button
-                                                                    className="btn-icon unblock-btn"
-                                                                    onClick={() => handleUnblockUser(member.id)}
-                                                                    title="Unblock User"
+                                                                    className="dropdown-item"
+                                                                    onClick={() => {
+                                                                        handleViewPaymentHistory(member.id);
+                                                                        setActiveDropdown(null);
+                                                                    }}
                                                                 >
-                                                                    <FiUserCheck />
+                                                                    <FiDollarSign /> Payment History
                                                                 </button>
-                                                            )}
+                                                                <button
+                                                                    className="dropdown-item"
+                                                                    onClick={() => {
+                                                                        openMarkPaymentModal(member);
+                                                                        setActiveDropdown(null);
+                                                                    }}
+                                                                >
+                                                                    <FiPlus /> Mark Payment
+                                                                </button>
+                                                                <button
+                                                                    className="dropdown-item"
+                                                                    onClick={() => {
+                                                                        handleSendReminder(member.id);
+                                                                        setActiveDropdown(null);
+                                                                    }}
+                                                                >
+                                                                    <FiSend /> Send Reminder
+                                                                </button>
+                                                                <button
+                                                                    className="dropdown-item"
+                                                                    onClick={() => {
+                                                                        handleSendWhatsApp(member);
+                                                                        setActiveDropdown(null);
+                                                                    }}
+                                                                >
+                                                                    <FiMessageSquare /> Send WhatsApp
+                                                                </button>
+                                                                <button
+                                                                    className="dropdown-item"
+                                                                    onClick={() => {
+                                                                        openSwitchMembershipModal(member);
+                                                                        setActiveDropdown(null);
+                                                                    }}
+                                                                >
+                                                                    <FiCreditCard /> Switch Membership
+                                                                </button>
+                                                                {member.status === 'ACTIVE' ? (
+                                                                    <button
+                                                                        className="dropdown-item"
+                                                                        onClick={() => {
+                                                                            handleBlockUser(member.id);
+                                                                            setActiveDropdown(null);
+                                                                        }}
+                                                                    >
+                                                                        <FiUserX /> Block User
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        className="dropdown-item"
+                                                                        onClick={() => {
+                                                                            handleUnblockUser(member.id);
+                                                                            setActiveDropdown(null);
+                                                                        }}
+                                                                    >
+                                                                        <FiUserCheck /> Unblock User
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    className="dropdown-item danger"
+                                                                    onClick={() => {
+                                                                        handleDeleteUser(member.id);
+                                                                        setActiveDropdown(null);
+                                                                    }}
+                                                                >
+                                                                    <FiTrash2 /> Delete User
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1297,49 +1423,62 @@ function AdminDashboard() {
             <div className="card-header">
                 <h2 className="card-title">Membership Plans</h2>
                 <button
-                    className="btn-primary"
+                    className="btn btn-primary"
                     onClick={() => setShowMembershipModal(true)}
                 >
                     <FiPlus /> Add New Plan
                 </button>
             </div>
             <div className="memberships-grid">
-                {memberships.map(membership => (
-                    <div className="membership-card" key={membership.id}>
-                        <div className="membership-header">
-                            <h3>{membership.name}</h3>
-                            <div className="membership-actions">
-                                <button
-                                    className="btn-icon"
-                                    onClick={() => {
-                                        setEditingMembership(membership);
-                                        setShowMembershipModal(true);
-                                    }}
-                                    title="Edit"
-                                >
-                                    <FiEdit />
-                                </button>
-                                <button
-                                    className="btn-icon btn-danger"
-                                    onClick={() => handleDeleteMembership(membership.id)}
-                                    title="Delete"
-                                >
-                                    <FiTrash2 />
-                                </button>
+                {memberships.map(membership => {
+                    const dropdownId = `membership-${membership.id}`;
+                    return (
+                        <div className="membership-card" key={membership.id}>
+                            <div className="membership-header">
+                                <h3>{membership.name}</h3>
+                                <div className="dropdown-container" ref={el => dropdownRefs.current[dropdownId] = el}>
+                                    <button
+                                        className="dropdown-toggle"
+                                        onClick={(e) => handleDropdownClick(e, dropdownId)}
+                                    >
+                                        <FiMoreVertical />
+                                    </button>
+                                    <div className={`dropdown-menu ${activeDropdown === dropdownId ? 'show' : ''}`}>
+                                        <button
+                                            className="dropdown-item"
+                                            onClick={() => {
+                                                setEditingMembership(membership);
+                                                setShowMembershipModal(true);
+                                                setActiveDropdown(null);
+                                            }}
+                                        >
+                                            <FiEdit /> Edit
+                                        </button>
+                                        <button
+                                            className="dropdown-item danger"
+                                            onClick={() => {
+                                                handleDeleteMembership(membership.id);
+                                                setActiveDropdown(null);
+                                            }}
+                                        >
+                                            <FiTrash2 /> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="membership-body">
+                                <div className="membership-detail">
+                                    <span className="detail-label">Duration</span>
+                                    <span className="detail-value">{membership.durationInMonths} months</span>
+                                </div>
+                                <div className="membership-detail">
+                                    <span className="detail-label">Fee</span>
+                                    <span className="detail-value">₹{membership.fee}</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="membership-body">
-                            <div className="membership-detail">
-                                <span className="detail-label">Duration</span>
-                                <span className="detail-value">{membership.durationInMonths} months</span>
-                            </div>
-                            <div className="membership-detail">
-                                <span className="detail-label">Fee</span>
-                                <span className="detail-value">₹{membership.fee}</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
@@ -1381,13 +1520,13 @@ function AdminDashboard() {
                     <h2 className="card-title">{getFilterTitle()}</h2>
                     <div className="header-actions">
                         <button
-                            className="btn-primary"
+                            className="btn btn-primary"
                             onClick={handleExportPaymentHistory}
                         >
                             <FiDownload /> Export CSV
                         </button>
                         <button
-                            className="btn-danger"
+                            className="btn btn-danger"
                             onClick={handleDeleteAllPayments}
                         >
                             <FiTrash2 /> Delete All
@@ -1440,92 +1579,109 @@ function AdminDashboard() {
                                         (payment.userEmail && payment.userEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
                                         payment.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase())
                                     )
-                                    .map(payment => (
-                                        <tr key={payment.id}>
-                                            <td>
-                                                {payment.userFullName ? (
-                                                    <div className="table-member-info">
-                                                        <div
-                                                            className="table-avatar"
-                                                            onClick={() =>
-                                                                payment.userProfilePictureUrl && handleViewImage(payment.userProfilePictureUrl)
-                                                            }
-                                                        >
-                                                            {payment.userProfilePictureUrl ? (
-                                                                <img
-                                                                    src={payment.userProfilePictureUrl}
-                                                                    alt={payment.userFullName}
-                                                                    style={{ objectFit: "cover" }}
-                                                                />
-                                                            ) : (
-                                                                payment.userFullName.charAt(0).toUpperCase()
-                                                            )}
+                                    .map(payment => {
+                                        const dropdownId = `payment-${payment.id}`;
+                                        return (
+                                            <tr key={payment.id}>
+                                                <td>
+                                                    {payment.userFullName ? (
+                                                        <div className="table-member-info">
+                                                            <div
+                                                                className="table-avatar"
+                                                                onClick={() =>
+                                                                    payment.userProfilePictureUrl && handleViewImage(payment.userProfilePictureUrl)
+                                                                }
+                                                            >
+                                                                {payment.userProfilePictureUrl ? (
+                                                                    <img
+                                                                        src={payment.userProfilePictureUrl}
+                                                                        alt={payment.userFullName}
+                                                                        style={{ objectFit: "cover" }}
+                                                                    />
+                                                                ) : (
+                                                                    payment.userFullName.charAt(0).toUpperCase()
+                                                                )}
+                                                            </div>
+                                                            <span>{payment.userFullName}</span>
                                                         </div>
-                                                        <span>{payment.userFullName}</span>
-                                                    </div>
-                                                ) : (
-                                                    "N/A"
-                                                )}
-                                            </td>
-                                            <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
-                                            <td>₹{payment.amount.toFixed(2)}</td>
-                                            <td>{payment.paymentMethod || 'N/A'}</td>
-                                            <td>
-                                                {payment.receiptUrl ? (
-                                                    <div className="receipt-actions">
+                                                    ) : (
+                                                        "N/A"
+                                                    )}
+                                                </td>
+                                                <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                                                <td>₹{payment.amount.toFixed(2)}</td>
+                                                <td>{payment.paymentMethod || 'N/A'}</td>
+                                                <td>
+                                                    {payment.receiptUrl ? (
+                                                        <div className="receipt-actions">
+                                                            <button
+                                                                className="btn-icon"
+                                                                onClick={() => handleViewImage(payment.receiptUrl)}
+                                                                title="View Receipt"
+                                                            >
+                                                                <FiImage />
+                                                            </button>
+                                                            <button
+                                                                className="btn-icon"
+                                                                onClick={() => handlePrintReceipt(payment)}
+                                                                title="Print Receipt"
+                                                            >
+                                                                <FiPrinter />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="no-receipt">No receipt</span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <div className="dropdown-container" ref={el => dropdownRefs.current[dropdownId] = el}>
                                                         <button
-                                                            className="btn-icon"
-                                                            onClick={() => handleViewImage(payment.receiptUrl)}
-                                                            title="View Receipt"
+                                                            className="dropdown-toggle"
+                                                            onClick={(e) => handleDropdownClick(e, dropdownId)}
                                                         >
-                                                            <FiImage />
+                                                            <FiMoreVertical />
                                                         </button>
-                                                        <button
-                                                            className="btn-icon"
-                                                            onClick={() => handlePrintReceipt(payment)}
-                                                            title="Print Receipt"
-                                                        >
-                                                            <FiPrinter />
-                                                        </button>
+                                                        <div className={`dropdown-menu ${activeDropdown === dropdownId ? 'show' : ''}`}>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => {
+                                                                    handleViewPaymentDetails(payment);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <FiEye /> View Details
+                                                            </button>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => {
+                                                                    handleSendWhatsApp(
+                                                                        {
+                                                                            fullName: payment.userFullName,
+                                                                            mobileNumber: payment.userMobileNumber,
+                                                                            payments: [payment]
+                                                                        },
+                                                                        payment
+                                                                    );
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <FiMessageSquare /> Share Receipt via WhatsApp
+                                                            </button>
+                                                            <button
+                                                                className="dropdown-item danger"
+                                                                onClick={() => {
+                                                                    handleDeletePayment(payment.id);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                            >
+                                                                <FiTrash2 /> Delete Payment
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                ) : (
-                                                    <span className="no-receipt">No receipt</span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <div className="table-actions">
-                                                    <button
-                                                        className="btn-icon"
-                                                        onClick={() => handleViewPaymentDetails(payment)}
-                                                        title="View Details"
-                                                    >
-                                                        <FiEye />
-                                                    </button>
-                                                    <button
-                                                        className="btn-icon"
-                                                        onClick={() => handleSendWhatsApp(
-                                                            {
-                                                                fullName: payment.userFullName,
-                                                                mobileNumber: payment.userMobileNumber,
-                                                                payments: [payment]
-                                                            },
-                                                            payment
-                                                        )}
-                                                        title="Share Receipt via WhatsApp"
-                                                    >
-                                                        <FiMessageSquare />
-                                                    </button>
-                                                    <button
-                                                        className="btn-icon btn-danger"
-                                                        onClick={() => handleDeletePayment(payment.id)}
-                                                        title="Delete Payment"
-                                                    >
-                                                        <FiTrash2 />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                             </tbody>
                         </table>
                     </div>
@@ -1563,7 +1719,7 @@ function AdminDashboard() {
     return (
         <div className={`dashboard-container ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             {/* Sidebar */}
-            <aside className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <h2>VipGym</h2>
                     <button className="sidebar-close" onClick={() => setIsSidebarOpen(false)}>
@@ -1611,6 +1767,11 @@ function AdminDashboard() {
             <main className="main-content">
                 {/* Header */}
                 <header className="dashboard-header">
+                    {activeSection !== 'dashboard' && (
+                        <button className="back-btn" onClick={() => setActiveSection('dashboard')}>
+                            <FiChevronLeft /> Back
+                        </button>
+                    )}
                     <button className="hamburger" onClick={toggleSidebar}>
                         <FiMenu />
                     </button>
@@ -1650,7 +1811,7 @@ function AdminDashboard() {
 
             {/* User Details Modal */}
             {showUserDetails && selectedUser && (
-                <div className="modal-overlay" onClick={() => setShowUserDetails(false)}>
+                <div className="modal-overlay show" onClick={() => setShowUserDetails(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Member Details</h2>
@@ -1716,7 +1877,7 @@ function AdminDashboard() {
                             </div>
                             <div className="modal-actions">
                                 <button
-                                    className="btn-secondary"
+                                    className="btn btn-secondary"
                                     onClick={() => {
                                         setShowUserDetails(false);
                                         handleViewPaymentHistory(selectedUser.id);
@@ -1725,46 +1886,46 @@ function AdminDashboard() {
                                     <FiDollarSign /> View Payments
                                 </button>
                                 <button
-                                    className="btn-secondary"
+                                    className="btn btn-secondary"
                                     onClick={() => openMarkPaymentModal(selectedUser)}
                                 >
                                     <FiPlus /> Mark Payment
                                 </button>
                                 <button
-                                    className="btn-secondary"
+                                    className="btn btn-secondary"
                                     onClick={() => handleSendReminder(selectedUser.id)}
                                 >
                                     <FiSend /> Send Reminder
                                 </button>
                                 <button
-                                    className="btn-secondary"
+                                    className="btn btn-secondary"
                                     onClick={() => handleSendWhatsApp(selectedUser)}
                                 >
                                     <FiMessageSquare /> Send WhatsApp
                                 </button>
                                 <button
-                                    className="btn-secondary"
+                                    className="btn btn-secondary"
                                     onClick={() => openSwitchMembershipModal(selectedUser)}
                                 >
                                     <FiCreditCard /> Switch Membership
                                 </button>
                                 {selectedUser.status === 'ACTIVE' ? (
                                     <button
-                                        className="btn-warning"
+                                        className="btn btn-warning"
                                         onClick={() => handleBlockUser(selectedUser.id)}
                                     >
                                         <FiUserX /> Block User
                                     </button>
                                 ) : (
                                     <button
-                                        className="btn-success"
+                                        className="btn btn-success"
                                         onClick={() => handleUnblockUser(selectedUser.id)}
                                     >
                                         <FiUserCheck /> Unblock User
                                     </button>
                                 )}
                                 <button
-                                    className="btn-danger"
+                                    className="btn btn-danger"
                                     onClick={() => handleDeleteUser(selectedUser.id)}
                                 >
                                     <FiTrash2 /> Delete User
@@ -1776,7 +1937,7 @@ function AdminDashboard() {
             )}
 
             {showSwitchMembershipModal && (
-                <div className="modal-overlay" onClick={() => setShowSwitchMembershipModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowSwitchMembershipModal(false)}>
                     <div
                         className="modal-content"
                         onClick={(e) => e.stopPropagation()}
@@ -1821,14 +1982,14 @@ function AdminDashboard() {
                         <div className="modal-actions">
                             <button
                                 type="button"
-                                className="btn-secondary"
+                                className="btn btn-secondary"
                                 onClick={() => setShowSwitchMembershipModal(false)}
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                className="btn-primary"
+                                className="btn btn-primary"
                                 onClick={handleSwitchMembership}
                             >
                                 Switch Plan
@@ -1840,7 +2001,7 @@ function AdminDashboard() {
 
             {/* Payment History Modal */}
             {showPaymentModal && userPayments && (
-                <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowPaymentModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Payment History</h2>
@@ -1885,67 +2046,84 @@ function AdminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {userPayments.payments.map(payment => (
-                                                    <tr key={payment.id}>
-                                                        <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
-                                                        <td>₹{payment.amount.toFixed(2)}</td>
-                                                        <td>{payment.paymentMethod || 'N/A'}</td>
-                                                        <td>
-                                                            {payment.receiptUrl ? (
-                                                                <div className="receipt-actions">
+                                                {userPayments.payments.map(payment => {
+                                                    const dropdownId = `payment-modal-${payment.id}`;
+                                                    return (
+                                                        <tr key={payment.id}>
+                                                            <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                                                            <td>₹{payment.amount.toFixed(2)}</td>
+                                                            <td>{payment.paymentMethod || 'N/A'}</td>
+                                                            <td>
+                                                                {payment.receiptUrl ? (
+                                                                    <div className="receipt-actions">
+                                                                        <button
+                                                                            className="btn-icon"
+                                                                            onClick={() => handleViewImage(payment.receiptUrl)}
+                                                                            title="View Receipt"
+                                                                        >
+                                                                            <FiImage />
+                                                                        </button>
+                                                                        <button
+                                                                            className="btn-icon"
+                                                                            onClick={() => handlePrintReceipt(payment)}
+                                                                            title="Print Receipt"
+                                                                        >
+                                                                            <FiPrinter />
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="no-receipt">No receipt</span>
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                <div className="dropdown-container" ref={el => dropdownRefs.current[dropdownId] = el}>
                                                                     <button
-                                                                        className="btn-icon"
-                                                                        onClick={() => handleViewImage(payment.receiptUrl)}
-                                                                        title="View Receipt"
+                                                                        className="dropdown-toggle"
+                                                                        onClick={(e) => handleDropdownClick(e, dropdownId)}
                                                                     >
-                                                                        <FiImage />
+                                                                        <FiMoreVertical />
                                                                     </button>
-                                                                    <button
-                                                                        className="btn-icon"
-                                                                        onClick={() => handlePrintReceipt(payment)}
-                                                                        title="Print Receipt"
-                                                                    >
-                                                                        <FiPrinter />
-                                                                    </button>
+                                                                    <div className={`dropdown-menu ${activeDropdown === dropdownId ? 'show' : ''}`}>
+                                                                        <button
+                                                                            className="dropdown-item"
+                                                                            onClick={() => {
+                                                                                handleViewPaymentDetails(payment);
+                                                                                setActiveDropdown(null);
+                                                                            }}
+                                                                        >
+                                                                            <FiEye /> View Details
+                                                                        </button>
+                                                                        <button
+                                                                            className="dropdown-item"
+                                                                            onClick={() => {
+                                                                                handleSendWhatsApp(
+                                                                                    {
+                                                                                        fullName: userPayments.user?.fullName,
+                                                                                        mobileNumber: userPayments.user?.mobileNumber,
+                                                                                        payments: [payment]
+                                                                                    },
+                                                                                    payment
+                                                                                );
+                                                                                setActiveDropdown(null);
+                                                                            }}
+                                                                        >
+                                                                            <FiMessageSquare /> Share Receipt via WhatsApp
+                                                                        </button>
+                                                                        <button
+                                                                            className="dropdown-item danger"
+                                                                            onClick={() => {
+                                                                                handleDeletePayment(payment.id);
+                                                                                setActiveDropdown(null);
+                                                                            }}
+                                                                        >
+                                                                            <FiTrash2 /> Delete Payment
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            ) : (
-                                                                <span className="no-receipt">No receipt</span>
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            <div className="table-actions">
-                                                                <button
-                                                                    className="btn-icon"
-                                                                    onClick={() => handleViewPaymentDetails(payment)}
-                                                                    title="View Details"
-                                                                >
-                                                                    <FiEye />
-                                                                </button>
-                                                                <button
-                                                                    className="btn-icon"
-                                                                    onClick={() => handleSendWhatsApp(
-                                                                        {
-                                                                            fullName: userPayments.user?.fullName,
-                                                                            mobileNumber: userPayments.user?.mobileNumber,
-                                                                            payments: [payment]
-                                                                        },
-                                                                        payment
-                                                                    )}
-                                                                    title="Share Receipt via WhatsApp"
-                                                                >
-                                                                    <FiMessageSquare />
-                                                                </button>
-                                                                <button
-                                                                    className="btn-icon btn-danger"
-                                                                    onClick={() => handleDeletePayment(payment.id)}
-                                                                    title="Delete Payment"
-                                                                >
-                                                                    <FiTrash2 />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     ) : (
@@ -1960,7 +2138,7 @@ function AdminDashboard() {
 
             {/* Payment Details Modal */}
             {showPaymentDetailsModal && selectedPayment && (
-                <div className="modal-overlay" onClick={() => setShowPaymentDetailsModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowPaymentDetailsModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Payment Details</h2>
@@ -2026,7 +2204,7 @@ function AdminDashboard() {
                             </div>
                             <div className="modal-actions">
                                 <button
-                                    className="btn-secondary"
+                                    className="btn btn-secondary"
                                     onClick={() => handleSendWhatsApp(
                                         {
                                             fullName: selectedPayment.user?.fullName,
@@ -2039,7 +2217,7 @@ function AdminDashboard() {
                                     <FiMessageSquare /> Share Receipt via WhatsApp
                                 </button>
                                 <button
-                                    className="btn-danger"
+                                    className="btn btn-danger"
                                     onClick={() => handleDeletePayment(selectedPayment.id)}
                                 >
                                     <FiTrash2 /> Delete Payment
@@ -2052,7 +2230,7 @@ function AdminDashboard() {
 
             {/* Reminder Modal */}
             {showReminderModal && selectedUser && (
-                <div className="modal-overlay" onClick={() => setShowReminderModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowReminderModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Send Reminder</h2>
@@ -2079,19 +2257,19 @@ function AdminDashboard() {
                         </div>
                         <div className="modal-actions">
                             <button
-                                className="btn-secondary"
+                                className="btn btn-secondary"
                                 onClick={() => setShowReminderModal(false)}
                             >
                                 Cancel
                             </button>
                             <button
-                                className="btn-primary"
+                                className="btn btn-primary"
                                 onClick={handleSendEmailReminder}
                             >
                                 <FiAtSign /> Send Email
                             </button>
                             <button
-                                className="btn-primary"
+                                className="btn btn-primary"
                                 onClick={handleSendWhatsAppReminder}
                             >
                                 <FiMessageSquare /> Send WhatsApp
@@ -2103,7 +2281,7 @@ function AdminDashboard() {
 
             {/* Membership Modal */}
             {showMembershipModal && (
-                <div className="modal-overlay" onClick={() => {
+                <div className="modal-overlay show" onClick={() => {
                     setShowMembershipModal(false);
                     setEditingMembership(null);
                 }}>
@@ -2133,6 +2311,7 @@ function AdminDashboard() {
                                                 }
                                             }}
                                             required
+                                            className="form-control"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -2149,6 +2328,7 @@ function AdminDashboard() {
                                                 }
                                             }}
                                             required
+                                            className="form-control"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -2166,17 +2346,18 @@ function AdminDashboard() {
                                                 }
                                             }}
                                             required
+                                            className="form-control"
                                         />
                                     </div>
                                 </div>
                                 <div className="modal-actions">
-                                    <button type="button" className="btn-secondary" onClick={() => {
+                                    <button type="button" className="btn btn-secondary" onClick={() => {
                                         setShowMembershipModal(false);
                                         setEditingMembership(null);
                                     }}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn-primary">
+                                    <button type="submit" className="btn btn-primary">
                                         {editingMembership ? 'Update Plan' : 'Add Plan'}
                                     </button>
                                 </div>
@@ -2188,7 +2369,7 @@ function AdminDashboard() {
 
             {/* Mark Payment Modal */}
             {showMarkPaymentModal && (
-                <div className="modal-overlay" onClick={() => setShowMarkPaymentModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowMarkPaymentModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Mark Payment</h2>
@@ -2208,6 +2389,7 @@ function AdminDashboard() {
                                             value={markPaymentForm.amount}
                                             onChange={(e) => setMarkPaymentForm({ ...markPaymentForm, amount: e.target.value })}
                                             required
+                                            className="form-control"
                                         />
                                     </div>
                                     <div className="form-group">
@@ -2215,6 +2397,7 @@ function AdminDashboard() {
                                         <select
                                             value={markPaymentForm.paymentMethod}
                                             onChange={(e) => setMarkPaymentForm({ ...markPaymentForm, paymentMethod: e.target.value })}
+                                            className="form-control"
                                         >
                                             <option value="CASH">Cash</option>
                                             <option value="CARD">Card</option>
@@ -2227,6 +2410,7 @@ function AdminDashboard() {
                                             value={markPaymentForm.remarks}
                                             onChange={(e) => setMarkPaymentForm({ ...markPaymentForm, remarks: e.target.value })}
                                             rows="3"
+                                            className="form-control"
                                         ></textarea>
                                     </div>
                                     <div className="form-group">
@@ -2235,14 +2419,15 @@ function AdminDashboard() {
                                             type="date"
                                             value={markPaymentForm.nextDueDate}
                                             onChange={(e) => setMarkPaymentForm({ ...markPaymentForm, nextDueDate: e.target.value })}
+                                            className="form-control"
                                         />
                                     </div>
                                 </div>
                                 <div className="modal-actions">
-                                    <button type="button" className="btn-secondary" onClick={() => setShowMarkPaymentModal(false)}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setShowMarkPaymentModal(false)}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn-primary">
+                                    <button type="submit" className="btn btn-primary">
                                         Mark Payment
                                     </button>
                                 </div>
@@ -2254,7 +2439,7 @@ function AdminDashboard() {
 
             {/* Switch Membership Modal */}
             {showSwitchMembershipModal && selectedUser && (
-                <div className="modal-overlay" onClick={() => setShowSwitchMembershipModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowSwitchMembershipModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Switch Membership Plan</h2>
@@ -2283,6 +2468,7 @@ function AdminDashboard() {
                                                 newMembershipId: e.target.value
                                             })}
                                             required
+                                            className="form-control"
                                         >
                                             <option value="">Select a membership plan</option>
                                             {memberships
@@ -2295,10 +2481,10 @@ function AdminDashboard() {
                                         </select>
                                     </div>
                                     <div className="modal-actions">
-                                        <button type="button" className="btn-secondary" onClick={() => setShowSwitchMembershipModal(false)}>
+                                        <button type="button" className="btn btn-secondary" onClick={() => setShowSwitchMembershipModal(false)}>
                                             Cancel
                                         </button>
-                                        <button type="submit" className="btn-primary">
+                                        <button type="submit" className="btn btn-primary">
                                             Switch Membership
                                         </button>
                                     </div>
@@ -2311,7 +2497,7 @@ function AdminDashboard() {
 
             {/* Image Modal */}
             {showImageModal && selectedImage && (
-                <div className="modal-overlay" onClick={() => setShowImageModal(false)}>
+                <div className="modal-overlay show" onClick={() => setShowImageModal(false)}>
                     <div className="image-modal-content" onClick={e => e.stopPropagation()}>
                         <div className="image-modal-header">
                             <h3>Image Preview</h3>
@@ -2326,7 +2512,7 @@ function AdminDashboard() {
                             <a
                                 href={selectedImage}
                                 download="image"
-                                className="btn-primary"
+                                className="btn btn-primary"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >

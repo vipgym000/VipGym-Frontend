@@ -60,6 +60,12 @@ function AdminDashboard() {
     const intervalRef = useRef(null);
     const [viewMode, setViewMode] = useState('grid');
 
+    // Reminder state
+    const [showReminderModal, setShowReminderModal] = useState(false);
+    const [selectedReminderUser, setSelectedReminderUser] = useState(null);
+    const [reminderMessage, setReminderMessage] = useState('');
+    const [reminderMethod, setReminderMethod] = useState('email');
+
     // Data States
     const [users, setUsers] = useState([]);
     const [memberships, setMemberships] = useState([]);
@@ -77,11 +83,9 @@ function AdminDashboard() {
     const [newMembership, setNewMembership] = useState({ name: '', durationInMonths: '', fee: '' });
     const [selectedUser, setSelectedUser] = useState(null);
     const [userPayments, setUserPayments] = useState({ payments: [], daysLeft: null });
-    const [reminderMessage, setReminderMessage] = useState('');
     const [editingMembership, setEditingMembership] = useState(null);
     const [showUserDetails, setShowUserDetails] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [showReminderModal, setShowReminderModal] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [showMembershipModal, setShowMembershipModal] = useState(false);
@@ -506,6 +510,62 @@ function AdminDashboard() {
         setShowImageModal(true);
     };
 
+    // Reminder Functions
+    const handleOpenReminderModal = (user) => {
+        setSelectedReminderUser(user);
+        
+        // Generate default reminder message
+        const defaultMessage = `Dear ${user.fullName},\n\nThis is a reminder that your gym membership is expiring soon. Your next due date is ${user.nextDueDate || 'N/A'}.\n\nPlease renew your membership to continue enjoying our facilities.\n\nThank you,\nVipGym Team`;
+        
+        setReminderMessage(defaultMessage);
+        setReminderMethod('email');
+        setShowReminderModal(true);
+    };
+
+    const handleSendReminder = async () => {
+        if (!selectedReminderUser) {
+            showMessage("No user selected", 'error');
+            return;
+        }
+
+        try {
+            if (reminderMethod === 'email') {
+                // Send email reminder
+                const response = await fetch(`${API_BASE_URL}/api/reminder/send/${selectedReminderUser.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: reminderMessage })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showMessage(result.status || 'Email reminder sent successfully', 'success');
+                } else {
+                    throw new Error('Failed to send email reminder');
+                }
+            } else {
+                // Send WhatsApp reminder
+                const phoneNumber = selectedReminderUser.mobileNumber?.replace(/\D/g, '');
+                if (!phoneNumber) {
+                    showMessage('Member does not have a valid mobile number.', 'error');
+                    return;
+                }
+
+                // Encode message for URL
+                const encodedMessage = encodeURIComponent(reminderMessage);
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                
+                // Open WhatsApp in a new tab
+                window.open(whatsappUrl, '_blank');
+                showMessage('WhatsApp reminder opened successfully', 'success');
+            }
+
+            setShowReminderModal(false);
+        } catch (error) {
+            showMessage(`Failed to send reminder: ${error.message}`, 'error');
+        }
+    };
+
     // Unified WhatsApp function that always uses the backend endpoint
     const handleSendWhatsApp = (user, payment = null, customMessage = null) => {
         const phoneNumber = user.mobileNumber?.replace(/\D/g, '');
@@ -554,53 +614,43 @@ function AdminDashboard() {
         }
     };
 
-    const handleSendReminder = async (userId) => {
-        try {
-            const message = await fetchReminderMessage(userId);
-            const userData = await apiCall(`/admin/users/${userId}`);
-            if (userData) {
-                setSelectedUser(userData);
-                setReminderMessage(message);
-                setShowReminderModal(true);
-            }
-        } catch (error) {
-            showMessage("Failed to prepare reminder: " + error.message, 'error');
-        }
-    };
-
-    const handleSendEmailReminder = async () => {
-        if (!selectedUser) {
+    const handleSendReminderFromModal = async () => {
+        if (!selectedReminderUser) {
             showMessage("No user selected", 'error');
             return;
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/reminder/send/${selectedUser.id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
+            if (reminderMethod === 'email') {
+                const response = await fetch(`${API_BASE_URL}/api/reminder/send/${selectedReminderUser.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: reminderMessage })
+                });
 
-            if (response.ok) {
-                const result = await response.json();
-                showMessage(result.status || 'Email sent successfully', 'success');
-                setShowReminderModal(false);
+                if (response.ok) {
+                    const result = await response.json();
+                    showMessage(result.status || 'Email reminder sent successfully', 'success');
+                } else {
+                    throw new Error('Failed to send email reminder');
+                }
             } else {
-                throw new Error('Failed to send email reminder');
+                const phoneNumber = selectedReminderUser.mobileNumber?.replace(/\D/g, '');
+                if (!phoneNumber) {
+                    showMessage('Member does not have a valid mobile number.', 'error');
+                    return;
+                }
+
+                const encodedMessage = encodeURIComponent(reminderMessage);
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                window.open(whatsappUrl, '_blank');
+                showMessage('WhatsApp reminder opened successfully', 'success');
             }
+
+            setShowReminderModal(false);
         } catch (error) {
-            showMessage("Failed to send email reminder: " + error.message, 'error');
+            showMessage(`Failed to send reminder: ${error.message}`, 'error');
         }
-    };
-
-    // Now uses the unified handleSendWhatsApp function
-    const handleSendWhatsAppReminder = () => {
-        if (!selectedUser) {
-            showMessage("No user selected", 'error');
-            return;
-        }
-
-        // Use the unified WhatsApp function
-        handleSendWhatsApp(selectedUser, null, reminderMessage);
     };
 
     const handleViewPaymentDetails = (payment) => {
@@ -1186,7 +1236,7 @@ function AdminDashboard() {
                                                         <button
                                                             className="dropdown-item"
                                                             onClick={() => {
-                                                                handleSendReminder(member.id);
+                                                                handleOpenReminderModal(member);
                                                                 setActiveDropdown(null);
                                                             }}
                                                         >
@@ -1342,7 +1392,7 @@ function AdminDashboard() {
                                                                 <button
                                                                     className="dropdown-item"
                                                                     onClick={() => {
-                                                                        handleSendReminder(member.id);
+                                                                        handleOpenReminderModal(member);
                                                                         setActiveDropdown(null);
                                                                     }}
                                                                 >
@@ -1877,58 +1927,10 @@ function AdminDashboard() {
                             </div>
                             <div className="modal-actions">
                                 <button
-                                    className="btn btn-secondary"
-                                    onClick={() => {
-                                        setShowUserDetails(false);
-                                        handleViewPaymentHistory(selectedUser.id);
-                                    }}
+                                    className="btn btn-close"
+                                    onClick={() => setShowUserDetails(false)}
                                 >
-                                    <FiDollarSign /> View Payments
-                                </button>
-                                <button
-                                    className="btn btn-secondary"
-                                    onClick={() => openMarkPaymentModal(selectedUser)}
-                                >
-                                    <FiPlus /> Mark Payment
-                                </button>
-                                <button
-                                    className="btn btn-secondary"
-                                    onClick={() => handleSendReminder(selectedUser.id)}
-                                >
-                                    <FiSend /> Send Reminder
-                                </button>
-                                <button
-                                    className="btn btn-secondary"
-                                    onClick={() => handleSendWhatsApp(selectedUser)}
-                                >
-                                    <FiMessageSquare /> Send WhatsApp
-                                </button>
-                                <button
-                                    className="btn btn-secondary"
-                                    onClick={() => openSwitchMembershipModal(selectedUser)}
-                                >
-                                    <FiCreditCard /> Switch Membership
-                                </button>
-                                {selectedUser.status === 'ACTIVE' ? (
-                                    <button
-                                        className="btn btn-warning"
-                                        onClick={() => handleBlockUser(selectedUser.id)}
-                                    >
-                                        <FiUserX /> Block User
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="btn btn-success"
-                                        onClick={() => handleUnblockUser(selectedUser.id)}
-                                    >
-                                        <FiUserCheck /> Unblock User
-                                    </button>
-                                )}
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() => handleDeleteUser(selectedUser.id)}
-                                >
-                                    <FiTrash2 /> Delete User
+                                    <FiX /> Close
                                 </button>
                             </div>
                         </div>
@@ -1936,7 +1938,89 @@ function AdminDashboard() {
                 </div>
             )}
 
-            {showSwitchMembershipModal && (
+            {/* Reminder Modal */}
+            {showReminderModal && selectedReminderUser && (
+                <div className="modal-overlay show" onClick={() => setShowReminderModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Send Reminder</h2>
+                            <button className="btn-icon" onClick={() => setShowReminderModal(false)}>
+                                <FiX />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="reminder-form">
+                                <div className="form-group">
+                                    <label>Member</label>
+                                    <p>{selectedReminderUser.fullName}</p>
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label>Reminder Method</label>
+                                    <div className="reminder-methods">
+                                        <label className="radio-label">
+                                            <input
+                                                type="radio"
+                                                name="reminderMethod"
+                                                value="email"
+                                                checked={reminderMethod === 'email'}
+                                                onChange={() => setReminderMethod('email')}
+                                            />
+                                            Email
+                                        </label>
+                                        <label className="radio-label">
+                                            <input
+                                                type="radio"
+                                                name="reminderMethod"
+                                                value="whatsapp"
+                                                checked={reminderMethod === 'whatsapp'}
+                                                onChange={() => setReminderMethod('whatsapp')}
+                                            />
+                                            WhatsApp
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label>Reminder Message</label>
+                                    <textarea
+                                        value={reminderMessage}
+                                        onChange={(e) => setReminderMessage(e.target.value)}
+                                        rows="6"
+                                        placeholder="Enter your reminder message..."
+                                        className="form-control"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="btn btn-secondary"
+                                onClick={() => setShowReminderModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleSendReminderFromModal}
+                            >
+                                {reminderMethod === 'email' ? (
+                                    <>
+                                        <FiAtSign /> Send Email
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiMessageSquare /> Send WhatsApp
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Switch Membership Modal */}
+            {showSwitchMembershipModal && selectedUser && (
                 <div className="modal-overlay show" onClick={() => setShowSwitchMembershipModal(false)}>
                     <div
                         className="modal-content"
@@ -2204,76 +2288,12 @@ function AdminDashboard() {
                             </div>
                             <div className="modal-actions">
                                 <button
-                                    className="btn btn-secondary"
-                                    onClick={() => handleSendWhatsApp(
-                                        {
-                                            fullName: selectedPayment.user?.fullName,
-                                            mobileNumber: selectedPayment.user?.mobileNumber,
-                                            payments: [selectedPayment]
-                                        },
-                                        selectedPayment
-                                    )}
+                                    className="btn btn-close"
+                                    onClick={() => setShowPaymentDetailsModal(false)}
                                 >
-                                    <FiMessageSquare /> Share Receipt via WhatsApp
-                                </button>
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() => handleDeletePayment(selectedPayment.id)}
-                                >
-                                    <FiTrash2 /> Delete Payment
+                                    <FiX /> Close
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Reminder Modal */}
-            {showReminderModal && selectedUser && (
-                <div className="modal-overlay show" onClick={() => setShowReminderModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Send Reminder</h2>
-                            <button className="btn-icon" onClick={() => setShowReminderModal(false)}>
-                                <FiX />
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="reminder-form">
-                                <div className="form-group">
-                                    <label>Member</label>
-                                    <p>{selectedUser.fullName}</p>
-                                </div>
-                                <div className="form-group">
-                                    <label>Message</label>
-                                    <textarea
-                                        value={reminderMessage}
-                                        onChange={(e) => setReminderMessage(e.target.value)}
-                                        rows="5"
-                                        placeholder="Enter your reminder message..."
-                                    ></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-actions">
-                            <button
-                                className="btn btn-secondary"
-                                onClick={() => setShowReminderModal(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleSendEmailReminder}
-                            >
-                                <FiAtSign /> Send Email
-                            </button>
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleSendWhatsAppReminder}
-                            >
-                                <FiMessageSquare /> Send WhatsApp
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -2432,64 +2452,6 @@ function AdminDashboard() {
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Switch Membership Modal */}
-            {showSwitchMembershipModal && selectedUser && (
-                <div className="modal-overlay show" onClick={() => setShowSwitchMembershipModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Switch Membership Plan</h2>
-                            <button className="btn-icon" onClick={() => setShowSwitchMembershipModal(false)}>
-                                <FiX />
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="switch-membership-form">
-                                <div className="form-group">
-                                    <label>Member</label>
-                                    <p>{selectedUser.fullName}</p>
-                                </div>
-                                <div className="form-group">
-                                    <label>Current Membership</label>
-                                    <p>{selectedUser.membership?.name || 'No membership'}</p>
-                                </div>
-                                <form onSubmit={handleSwitchMembership}>
-                                    <div className="form-group">
-                                        <label htmlFor="newMembership">Select New Membership Plan</label>
-                                        <select
-                                            id="newMembership"
-                                            value={switchMembershipForm.newMembershipId}
-                                            onChange={(e) => setSwitchMembershipForm({
-                                                ...switchMembershipForm,
-                                                newMembershipId: e.target.value
-                                            })}
-                                            required
-                                            className="form-control"
-                                        >
-                                            <option value="">Select a membership plan</option>
-                                            {memberships
-                                                .filter(membership => membership.id !== selectedUser.membership?.id)
-                                                .map(membership => (
-                                                    <option key={membership.id} value={membership.id}>
-                                                        {membership.name} - ₹{membership.fee} ({membership.durationInMonths} months)
-                                                    </option>
-                                                ))}
-                                        </select>
-                                    </div>
-                                    <div className="modal-actions">
-                                        <button type="button" className="btn btn-secondary" onClick={() => setShowSwitchMembershipModal(false)}>
-                                            Cancel
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Switch Membership
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
                     </div>
                 </div>
